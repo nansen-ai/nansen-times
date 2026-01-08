@@ -32,13 +32,13 @@ jobs:
       - name: Check for changes
         id: git-check
         run: |
-          git diff --quiet content/ || echo "changes=true" >> $GITHUB_OUTPUT
+          git add content/
+          git diff --cached --quiet content/ || echo "changes=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push
         if: steps.git-check.outputs.changes == 'true'
         run: |
           git config user.name "Nansen Times Bot"
           git config user.email "bot@nansen.ai"
-          git add content/
           git commit -m "Daily articles: $(date -u +%Y-%m-%d)"
           git push
