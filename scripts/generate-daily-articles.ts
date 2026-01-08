@@ -168,7 +168,19 @@ Return ONLY valid JSON, no markdown or explanation.`;
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  let text = response.content[0].type === 'text' ? response.content[0].text : '';
+
+  // Strip markdown code blocks if present
+  text = text.trim();
+  if (text.startsWith('```json')) {
+    text = text.slice(7);
+  } else if (text.startsWith('```')) {
+    text = text.slice(3);
+  }
+  if (text.endsWith('```')) {
+    text = text.slice(0, -3);
+  }
+  text = text.trim();
 
   try {
     return JSON.parse(text);
