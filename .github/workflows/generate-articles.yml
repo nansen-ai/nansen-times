@@ -1,0 +1,44 @@
+name: Generate Daily Articles
+
+on:
+  schedule:
+    # 7am SGT = 23:00 UTC (previous day)
+    - cron: '0 23 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate articles
+        env:
+          NANSEN_API_KEY: ${{ secrets.NANSEN_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npx tsx scripts/generate-daily-articles.ts
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --quiet content/ || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          git config user.name "Nansen Times Bot"
+          git config user.email "bot@nansen.ai"
+          git add content/
+          git commit -m "Daily articles: $(date -u +%Y-%m-%d)"
+          git push
