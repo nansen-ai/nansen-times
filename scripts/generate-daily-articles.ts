@@ -198,6 +198,18 @@ function saveArticles(articles: GeneratedArticle[]) {
   const day = String(now.getDate()).padStart(2, '0');
 
   const dir = path.join(process.cwd(), 'content', 'articles', String(year), month, day);
+
+  // Clear existing articles for today to ensure fresh content
+  if (fs.existsSync(dir)) {
+    const existingFiles = fs.readdirSync(dir);
+    for (const file of existingFiles) {
+      if (file.endsWith('.mdx') || file.endsWith('.md')) {
+        fs.unlinkSync(path.join(dir, file));
+      }
+    }
+    console.log(`   Cleared ${existingFiles.length} existing articles for today`);
+  }
+
   fs.mkdirSync(dir, { recursive: true });
 
   const savedFiles: string[] = [];
